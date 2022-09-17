@@ -1,0 +1,62 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ develop ]
+
+env:
+  ecr-repo: test
+  image-tag: orange
+
+jobs:
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-southeast-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Backend Build, tag, and push image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ env.ecr-repo }}
+        IMAGE_TAG: ${{ env.image-tag }}
+      run: |
+        docker build --build-arg COLOR=$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./Day2/Ch07/cicd-pipeline/microservice
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  update-argocd-backend-metadata:
+    needs: build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./Day2/Ch07/cicd-pipeline/helm-charts
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: change values.yaml
+        run: |
+          sed -i 's/tag:.*/tag: ${{ env.image-tag }}/g' values.yaml
+
+      - name: git push
+        run: |
+          git config --global user.email "skwjdgh1@gmail.com"
+          git config --global user.name "Najeongho"
+          git pull origin main
+          git add values.yaml
+          git commit -m "[feat] trigger to deploy microservice container to kubernetes"
+          git push origin main
