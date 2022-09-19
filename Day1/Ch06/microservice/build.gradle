@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+  implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -40,7 +40,7 @@ jib {
   }
   // AWS ECR Repository URL 및 Tag 입력
   to {
-    image = '<AWS ECR Repository URL>'
+    image = '255380800200.dkr.ecr.ap-southeast-1.amazonaws.com/skt-user07'
     tags = ['1.0']
   }
 	container {
