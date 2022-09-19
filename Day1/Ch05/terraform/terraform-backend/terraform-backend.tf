@@ -26,3 +26,5 @@ resource "aws_dynamodb_table" "test-ddb-tf-lock" {
 
 }
 
+
+
